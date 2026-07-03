@@ -9,28 +9,54 @@ workflows:
       cache_paths:
         - $FLUTTER_ROOT/.pub-cache
     scripts:
+      - name: Set up code signing
+        script: |
+          keychain initialize
+          keychain add-certificates
+          # Codemagic автоматически подтянет сертификаты из Integrations → Apple
+
+      - name: Fetch provisioning profiles
+        script: |
+          # Codemagic автоматически найдёт подходящий provisioning profile
+          fetch-identifiers
+
       - name: Install dependencies
         script: flutter pub get
 
       - name: Build iOS
         script: flutter build ios --release --no-codesign
 
-      - name: Create IPA
+      - name: Archive
         script: |
-          # Копируем .app через ditto (сохраняет symlinks и metadata)
-          mkdir -p Payload
-          ditto build/ios/iphoneos/Runner.app Payload/Runner.app
+          cd ios
+          xcodebuild -workspace Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -destination generic/platform=iOS \
+            -archivePath ../build/Runner.xcarchive \
+            archive
 
-          # Проверяем что Info.plist существует и валиден
-          plutil -lint Payload/Runner.app/Info.plist
+      - name: Export IPA
+        script: |
+          cat > build/ExportOptions.plist << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>development</string>
+            <key>compileBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <false/>
+          </dict>
+          </plist>
+          EOF
 
-          # Пакуем IPA с сохранением symlinks
-          ditto -ck --sequesterRsrc --keepParent Payload LifeAnalytics.ipa
-
-          # Проверяем структуру IPA
-          unzip -l LifeAnalytics.ipa | head -20
-
-          rm -rf Payload
+          xcodebuild -exportArchive \
+            -archivePath build/Runner.xcarchive \
+            -exportPath build/ios/output \
+            -exportOptionsPlist build/ExportOptions.plist
 
     artifacts:
-      - LifeAnalytics.ipa
+      - build/ios/output/*.ipa
