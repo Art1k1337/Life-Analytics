@@ -8,7 +8,14 @@ workflows:
     scripts:
       - name: Install dependencies
         script: flutter pub get
+      - name: Install CocoaPods dependencies
+        script: cd ios && pod install
       - name: Build iOS
         script: flutter build ios --release --no-codesign
+      - name: Create .app directory
+        script: mkdir -p /tmp/build/ios
+      - name: Copy .app
+        script: cp -r build/ios/iphoneos/Runner.app /tmp/build/ios/
     artifacts:
+      - /tmp/build/ios/Runner.app
       - build/ios/iphoneos/Runner.app
