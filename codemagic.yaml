@@ -5,6 +5,11 @@ workflows:
       flutter: stable
       xcode: latest
       cocoapods: default
+    cache:
+      cache_paths:
+        - $FLUTTER_ROOT/.pub-cache
+        - $HOME/Library/Caches/CocoaPods
+        - ios/Pods
     scripts:
       - name: Install dependencies
         script: flutter pub get
@@ -12,10 +17,12 @@ workflows:
         script: cd ios && pod install
       - name: Build iOS
         script: flutter build ios --release --no-codesign
-      - name: Create .app directory
-        script: mkdir -p /tmp/build/ios
-      - name: Copy .app
-        script: cp -r build/ios/iphoneos/Runner.app /tmp/build/ios/
+      - name: Package IPA
+        script: |
+          mkdir -p /tmp/build/ios/ipa/Payload
+          cp -r build/ios/iphoneos/Runner.app /tmp/build/ios/ipa/Payload/
+          cd /tmp/build/ios/ipa
+          zip -r /tmp/build/ios/LifeAnalytics.ipa Payload
     artifacts:
-      - /tmp/build/ios/Runner.app
+      - /tmp/build/ios/LifeAnalytics.ipa
       - build/ios/iphoneos/Runner.app
