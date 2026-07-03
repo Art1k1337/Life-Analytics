@@ -6,9 +6,6 @@ workflows:
       flutter: stable
       xcode: latest
       cocoapods: default
-      ios-signing:
-        distribution_type: ad_hoc
-        bundle_identifier: com.lifeanalytics.lifeAnalytics
     cache:
       cache_paths:
         - $FLUTTER_ROOT/.pub-cache
@@ -20,6 +17,6 @@ workflows:
       - name: Install CocoaPods dependencies
         script: cd ios && pod install
       - name: Build iOS
-        script: flutter build ios --release
+        script: flutter build ios --release --no-codesign
     artifacts:
-      - build/ios/ipa/*.ipa
+      - build/ios/iphoneos/Runner.app
