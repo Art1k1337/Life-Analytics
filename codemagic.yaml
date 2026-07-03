@@ -1,22 +1,25 @@
 workflows:
   ios-release:
-    name: iOS Release
-    max_build_duration: 30
+    name: iOS Release (AltStore)
+    max_build_duration: 60
     environment:
       flutter: stable
       xcode: latest
-      cocoapods: default
     cache:
       cache_paths:
         - $FLUTTER_ROOT/.pub-cache
-        - $HOME/Library/Caches/CocoaPods
-        - ios/Pods
     scripts:
       - name: Install dependencies
         script: flutter pub get
-      - name: Install CocoaPods dependencies
-        script: cd ios && pod install
+
       - name: Build iOS
         script: flutter build ios --release --no-codesign
+
+      - name: Package IPA for AltStore
+        script: |
+          mkdir -p Payload
+          cp -r build/ios/iphoneos/Runner.app Payload/
+          zip -r LifeAnalytics.ipa Payload
+          rm -rf Payload
     artifacts:
-      - build/ios/iphoneos/Runner.app
+      - LifeAnalytics.ipa
