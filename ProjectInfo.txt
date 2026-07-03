@@ -1,0 +1,245 @@
+==============================================
+     LIFE ANALYTICS — ДОКУМЕНТАЦИЯ ПРОЕКТА
+==============================================
+
+
+----------------------------------------------
+1. ОСНОВНАЯ ИДЕЯ
+----------------------------------------------
+
+Life Analytics — это персональный трекер жизни, здоровья и продуктивности.
+
+Приложение помогает пользователю каждый день записывать данные о сне,
+настроении, физической активности, работе и отдыхе. На основе этих данных
+вычисляется "Индекс дня" (0-100), который отражает общее качество дня.
+
+Главная философия: вся аналитика происходит локально на устройстве.
+AI Engine анализирует данные и даёт персонализированные советы,
+но данные никогда не покидают устройство без ведома пользователя.
+
+Ключевые механики:
+  - ELO-рейтинг с калибровкой (7 дней) и 10 уровнями
+  - Локальный AI Engine (10 корреляций, 8 направлений, прогнозы)
+  - Анализ сна, настроения, стресса, энергии, активности, питания
+  - Закономерности (будни/выходные, лучший день недели)
+  - Виджет на рабочий стол Android
+  - Недельные отчёты с трендами
+  - Экспорт данных в CSV/JSON
+
+
+----------------------------------------------
+2. СТРУКТУРА ПРОЕКТА
+----------------------------------------------
+
+D:\Life_Analytics_beta\
+│
+├── pubspec.yaml                    — зависимости, версия
+├── AIGuide.txt                     — документация AI движка
+│
+├── android/
+│   └── app/src/main/
+│       ├── AndroidManifest.xml     — разрешения, виджет, активити
+│       ├── kotlin/.../MainActivity.kt
+│       ├── kotlin/.../LifeIndexWidgetProvider.kt  — провайдер виджета
+│       └── res/
+│           ├── layout/widget_life_index.xml  — layout виджета
+│           ├── xml/widget_life_index_info.xml
+│           ├── drawable/widget_background.xml
+│           ├── drawable/launch_background_dark.xml
+│           ├── values/styles.xml
+│           └── values-night/styles.xml
+│
+└── lib/
+    ├── main.dart                   — точка входа, инициализация
+    │
+    ├── core/
+    │   ├── constants/
+    │   │   └── app_constants.dart  — имя БД, версия
+    │   │
+    │   ├── models/
+    │   │   ├── day_entry.dart      — модель дня (16 полей)
+    │   │   ├── user_profile.dart   — профиль (имя, вес, рост, возраст, пол)
+    │   │   ├── habit.dart          — привычка с сериями
+    │   │   ├── life_goal.dart      — цель с прогрессом
+    │   │   ├── analytics_summary.dart  — сводка + WeeklyReport
+    │   │   ├── ai_insight.dart     — AI инсайт + анализ
+    │   │   └── elo_progress.dart   — ELO, уровни, история
+    │   │
+    │   ├── navigation/
+    │   │   └── app_router.dart     — GoRouter, 12 роутов
+    │   │
+    │   ├── repositories/
+    │   │   └── app_repository.dart — AppState, AppViewModel, SettingsViewModel
+    │   │
+    │   ├── scoring/
+    │   │   └── day_scoring.dart    — формулы индекса и продуктивности
+    │   │
+    │   ├── services/
+    │   │   ├── ai_engine.dart      — локальный AI Engine (полный анализ)
+    │   │   ├── analytics_service.dart — статистика, корреляции
+    │   │   ├── elo_service.dart    — ELO с SharedPreferences
+    │   │   ├── widget_service.dart — обновление Android виджета
+    │   │   ├── export_service.dart — CSV/JSON экспорт
+    │   │   ├── notification_service.dart — push-уведомления
+    │   │   ├── screen_time_service.dart — экранное время
+    │   │   └── steps_service.dart  — шаги (педометр)
+    │   │
+    │   ├── storage/
+    │   │   ├── database_service.dart — SQLite (3 таблицы)
+    │   │   ├── hive_service.dart     — Hive (история AI)
+    │   │   └── preferences_service.dart — SharedPreferences
+    │   │
+    │   ├── theme/
+    │   │   ├── app_theme.dart      — Material 3, светлая/тёмная
+    │   │   └── app_colors.dart     — палитра цветов
+    │   │
+    │   ├── utils/
+    │   │   └── greeting.dart       — приветствие по времени
+    │   │
+    │   └── widgets/
+    │       ├── app_shell.dart      — NavigationBar
+    │       ├── glass_card.dart     — стеклянная карточка
+    │       ├── metric_tile.dart    — плитка метрики
+    │       ├── charts.dart         — графики (fl_chart)
+    │       └── empty_state.dart    — пустое состояние
+    │
+    └── features/
+        ├── home/
+        │   ├── home_screen.dart        — главный экран
+        │   ├── finish_day_screen.dart   — заполнение дня
+        │   ├── onboarding_screen.dart   — онбординг
+        │   └── day_index_sheet.dart     — детали индекса
+        │
+        ├── analytics/
+        │   └── analytics_screen.dart    — аналитика, графики
+        │
+        ├── habits/
+        │   └── habits_screen.dart       — привычки
+        │
+        ├── goals/
+        │   └── goals_screen.dart        — цели
+        │
+        ├── calendar/
+        │   └── calendar_screen.dart     — календарь-heatmap
+        │
+        ├── ai/
+        │   └── ai_screen.dart           — AI аналитика
+        │
+        ├── profile/
+        │   ├── profile_screen.dart      — профиль, ELO
+        │   └── edit_profile_screen.dart — редактирование
+        │
+        ├── settings/
+        │   └── settings_screen.dart     — настройки
+        │
+        ├── weekly_report/
+        │   └── weekly_report_screen.dart — недельный отчёт
+        │
+        └── notifications/
+            └── notifications_screen.dart — уведомления
+
+
+----------------------------------------------
+3. ИНСТРУМЕНТЫ И ТЕХНОЛОГИИ
+----------------------------------------------
+
+Язык и фреймворк:
+  - Dart 3.12.2
+  - Flutter 3.44.4
+  - Material Design 3 (Material You)
+
+Состояние:
+  - flutter_riverpod 3.0.3 (StateNotifier + Provider)
+
+Навигация:
+  - go_router 17.0.0 (декларативные роуты)
+
+Хранение данных:
+  - sqflite 2.4.2 (SQLite — записи, привычки, цели)
+  - hive 2.2.3 (Hive — история AI анализов)
+  - shared_preferences 2.5.3 (настройки, ELO)
+
+AI и аналитика:
+  - Локальный AiEngine (10 корреляций, 8 направлений, прогнозы)
+
+Визуализация:
+  - fl_chart 1.2.0 (линейные графики, heatmap)
+
+Уведомления:
+  - flutter_local_notifications 19.5.0
+  - timezone 0.10.1
+
+Датчики:
+  - pedometer 4.2.0 (шаги)
+  - usage_stats 2.0.1 (экранное время)
+
+Экспорт и шаринг:
+  - share_plus 10.1.4
+  - path_provider 2.1.6
+
+Виджет:
+  - home_widget 0.7.0+1 (Android home screen widget)
+
+Иконки:
+  - material_symbols_icons 4.2951.0
+
+Утилиты:
+  - intl 0.20.2 (даты, форматирование)
+  - uuid 4.5.2 (генерация ID)
+  - path 1.9.1 (пути к файлам)
+
+Сборка:
+  - Android SDK 34
+  - NDK 30.0.14904198
+  - Kotlin
+  - Gradle (KTS)
+
+
+----------------------------------------------
+4. ФОРМУЛЫ
+----------------------------------------------
+
+Продуктивность (0-100):
+  работа+учёба: (мин / 360) × 40, макс 40
+  спорт:        (мин / 60) × 25, макс 25
+  штраф игры:   (мин / 240) × 30, макс -30
+  штраф экран:  (мин / 300) × 35, макс -35
+  итого:        clamp(0, 100)
+
+Индекс дня (0-100):
+  продуктивность × 0.40
+  настроение:    (mood / 10) × 25, макс 25
+  сон:           7-9ч=20, 6-7ч=14, 9-10ч=16, 5-6ч=8, <5ч=4
+  шаги:          (steps / 10000) × 15, defStyleAttr15
+  итого:         clamp(0, 100)
+
+ELO (калибровка, 7 дней):
+  Δ = (index - 50) × 3.5, clamp [-80, +120]
+
+ELO (основная):
+  Δ = (index - 50) × 0.6, без капов
+
+Уровни:
+  0-800: Start Chaos
+  800-1200: Новичок
+  1200-1600: Стабильный
+  1600-2000: Дисциплинированный
+  2000-2400: Фокусированный
+  2400-2800: Продвинутый
+  2800-3200: Мастер
+  3200-3800: Элита
+  3800-4500: Легенда
+  4500+: Трансцендент
+
+
+----------------------------------------------
+5. РАЗРЕШЕНИЯ ANDROID
+----------------------------------------------
+
+  - ACTIVITY_RECOGNITION (шаги)
+  - PACKAGE_USAGE_STATS (экранное время)
+  - POST_NOTIFICATIONS (уведомления, Android 13+)
+  - SCHEDULE_EXACT_ALARM (точные напоминания)
+
+
+==============================================
