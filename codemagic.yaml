@@ -15,11 +15,22 @@ workflows:
       - name: Build iOS
         script: flutter build ios --release --no-codesign
 
-      - name: Package IPA for AltStore
+      - name: Create IPA
         script: |
+          # Копируем .app через ditto (сохраняет symlinks и metadata)
           mkdir -p Payload
-          cp -r build/ios/iphoneos/Runner.app Payload/
-          zip -r LifeAnalytics.ipa Payload
+          ditto build/ios/iphoneos/Runner.app Payload/Runner.app
+
+          # Проверяем что Info.plist существует и валиден
+          plutil -lint Payload/Runner.app/Info.plist
+
+          # Пакуем IPA с сохранением symlinks
+          ditto -ck --sequesterRsrc --keepParent Payload LifeAnalytics.ipa
+
+          # Проверяем структуру IPA
+          unzip -l LifeAnalytics.ipa | head -20
+
           rm -rf Payload
+
     artifacts:
       - LifeAnalytics.ipa
